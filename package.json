@@ -1,0 +1,22 @@
+{
+  "name": "open-lottery",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "Real-time lottery draw ingestion service publishing normalised results over Redis Pub/Sub",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.5",
+    "dayjs": "^1.10.4",
+    "dotenv": "^16.6.1",
+    "express": "^4.17.1",
+    "node-schedule": "^2.0.0",
+    "redis": "^3.1.2",
+    "request-promise": "^4.2.6",
+    "zombie": "^6.1.4"
+  }
+}

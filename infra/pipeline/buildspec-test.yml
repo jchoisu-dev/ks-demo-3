@@ -22,8 +22,10 @@ phases:
       - |
         PASSED=0
         for i in $(seq 1 5); do
+          # The CLI returns results in pages, so count the matching event IDs across all pages
+          # (asking for length(events) would print one count per page, e.g. "2" and "0").
           COUNT=$(aws logs filter-log-events --log-group-name /ecs/sd-lottery-test/scraper \
-            --start-time "$START_MS" --filter-pattern '"open"' --query 'length(events)' --output text)
+            --start-time "$START_MS" --filter-pattern '"open"' --query 'events[].eventId' --output text | wc -w | tr -d ' ')
           if [ "${COUNT:-0}" -gt 0 ]; then
             echo "Smoke test passed: $COUNT draw(s) published"
             PASSED=1

@@ -10,6 +10,12 @@ variable "project" {
   default     = "sd-lottery"
 }
 
+variable "vpc_cidr" {
+  description = "IP range of the VPC. 10.20.0.0/16 gives 65,536 private addresses."
+  type        = string
+  default     = "10.20.0.0/16"
+}
+
 variable "services" {
   description = "Services that get their own container image repository"
   type        = set(string)

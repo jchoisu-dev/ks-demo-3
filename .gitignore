@@ -7,3 +7,6 @@ node_modules/
 *.tfstate.*
 *.tfplan
 crash.log
+
+# Personal Claude Code settings
+.claude/settings.local.json

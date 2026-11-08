@@ -37,6 +37,11 @@ variable "scraper_image" {
   type        = string
 }
 
+variable "oregon_api_key_parameter_arn" {
+  description = "SSM parameter (from the foundation layer) holding the Oregon Lottery API key"
+  type        = string
+}
+
 variable "redis_image" {
   description = "Official Redis image, from AWS's public mirror of Docker Hub (avoids Docker Hub download limits)"
   type        = string

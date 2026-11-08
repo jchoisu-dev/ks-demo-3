@@ -1,0 +1,43 @@
+# Test stage: create the test environment with the new image, check that draws
+# are actually being scraped, then destroy the environment again (pass or fail).
+version: 0.2
+
+env:
+  shell: bash
+
+phases:
+  install:
+    commands:
+      - bash infra/pipeline/install-terraform.sh
+
+  build:
+    commands:
+      - cd infra/environments/test
+      - terraform init -input=false -backend-config="bucket=$STATE_BUCKET" -backend-config="region=$AWS_REGION"
+      - START_MS=$(( $(date +%s) * 1000 ))
+      # wait_for_steady_state in the module makes this wait until both containers are running.
+      - terraform apply -input=false -auto-approve -var="scraper_image_tag=$IMAGE_TAG"
+      # Smoke test: within 8 minutes, the scraper must log at least one published draw ("open ...").
+      - |
+        PASSED=0
+        for i in $(seq 1 48); do
+          COUNT=$(aws logs filter-log-events --log-group-name /ecs/sd-lottery-test/scraper \
+            --start-time "$START_MS" --filter-pattern '"open"' --query 'length(events)' --output text)
+          if [ "${COUNT:-0}" -gt 0 ]; then
+            echo "Smoke test passed: $COUNT draw(s) published"
+            PASSED=1
+            break
+          fi
+          echo "No draws yet, waiting... ($i/48)"
+          sleep 10
+        done
+        if [ "$PASSED" -ne 1 ]; then
+          echo "Smoke test FAILED: no draws published within 8 minutes" >&2
+          aws logs tail /ecs/sd-lottery-test/scraper --since 10m || true
+        fi
+      # A failing command fails the stage, which stops the pipeline before staging.
+      - test "$PASSED" -eq 1
+    finally:
+      # Always tear the test environment down, even when the smoke test failed.
+      - cd "$CODEBUILD_SRC_DIR/infra/environments/test"
+      - terraform destroy -input=false -auto-approve -var="scraper_image_tag=$IMAGE_TAG"

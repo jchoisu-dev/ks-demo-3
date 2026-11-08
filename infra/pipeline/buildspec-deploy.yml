@@ -1,0 +1,20 @@
+# Deploy stage (staging and prod): point the environment at the image built in the Build stage.
+# ENVIRONMENT is set per pipeline action, so one script serves both environments.
+version: 0.2
+
+env:
+  shell: bash
+
+phases:
+  install:
+    commands:
+      - bash infra/pipeline/install-terraform.sh
+
+  build:
+    commands:
+      - cd "infra/environments/$ENVIRONMENT"
+      - terraform init -input=false -backend-config="bucket=$STATE_BUCKET" -backend-config="region=$AWS_REGION"
+      # -auto-approve is normal in pipelines: the human gate is the Approval stage before prod.
+      # ECS rolls out the new image; the circuit breaker rolls back if it fails to start.
+      - terraform apply -input=false -auto-approve -var="scraper_image_tag=$IMAGE_TAG"
+      - terraform output

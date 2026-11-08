@@ -1,0 +1,29 @@
+# Build stage: build the scraper image ONCE, tag it with the commit ID and push it to ECR.
+# Every later stage deploys this exact image ("build once, promote").
+version: 0.2
+
+env:
+  shell: bash
+  # Handed to the later stages through the pipeline variable #{BuildVariables.IMAGE_TAG}.
+  exported-variables:
+    - IMAGE_TAG
+
+phases:
+  pre_build:
+    commands:
+      # COMMIT_ID comes from the Source stage (#{SourceVariables.CommitId}).
+      - IMAGE_TAG="${COMMIT_ID:0:7}"
+      - echo "Image tag $IMAGE_TAG"
+      - aws ecr get-login-password | docker login --username AWS --password-stdin "${ECR_REPOSITORY_URL%%/*}"
+
+  build:
+    commands:
+      # Tags are immutable, so an image for this commit can only be pushed once.
+      # Re-running the pipeline for the same commit reuses the existing image.
+      - |
+        if aws ecr describe-images --repository-name "$ECR_REPOSITORY_NAME" --image-ids imageTag="$IMAGE_TAG" >/dev/null 2>&1; then
+          echo "Image $IMAGE_TAG already exists, skipping build"
+        else
+          docker build -t "$ECR_REPOSITORY_URL:$IMAGE_TAG" .
+          docker push "$ECR_REPOSITORY_URL:$IMAGE_TAG"
+        fi

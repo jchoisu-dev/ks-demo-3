@@ -1,5 +1,5 @@
 # The test environment. staging/ and prod/ are copies of this file with a different
-# environment name and state key; all the real definitions live in ../../modules/environment.
+# environment name and state key (the only two lines that differ); all the real definitions live in ../../modules/environment.
 
 terraform {
   required_version = ">= 1.10"
@@ -69,6 +69,8 @@ module "environment" {
   vpc_id        = data.terraform_remote_state.foundation.outputs.vpc_id
   subnet_ids    = data.terraform_remote_state.foundation.outputs.public_subnet_ids
   scraper_image = "${data.terraform_remote_state.foundation.outputs.ecr_repository_urls["scraper"]}:${var.scraper_image_tag}"
+
+  oregon_api_key_parameter_arn = data.terraform_remote_state.foundation.outputs.oregon_api_key_parameter_arn
 }
 
 output "redis_endpoint" {
@@ -83,9 +85,6 @@ output "redis_password_parameter" {
   value = module.environment.redis_password_parameter
 }
 
-output "oregon_api_key_parameter" {
-  value = module.environment.oregon_api_key_parameter
-}
 
 output "cluster_name" {
   value = module.environment.cluster_name

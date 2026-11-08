@@ -19,16 +19,5 @@ resource "aws_ssm_parameter" "redis_password" {
   value       = random_password.redis.result
 }
 
-# The Oregon API key comes from outside (your Oregon Lottery account), so Terraform
-# creates the parameter with a placeholder and you set the real value once with the CLI.
-# ignore_changes stops Terraform from putting the placeholder back on the next apply.
-resource "aws_ssm_parameter" "oregon_api_key" {
-  name        = "/${var.project}/${var.environment}/oregon-api-key"
-  description = "Oregon Lottery API subscription key for ${local.name}"
-  type        = "SecureString"
-  value       = "CHANGE_ME"
-
-  lifecycle {
-    ignore_changes = [value]
-  }
-}
+# The Oregon API key is shared by all environments and lives in the foundation layer
+# (see infra/foundation/secrets.tf); its ARN comes in as var.oregon_api_key_parameter_arn.

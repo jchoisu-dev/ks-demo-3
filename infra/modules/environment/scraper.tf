@@ -27,7 +27,7 @@ resource "aws_ecs_task_definition" "scraper" {
     # Secrets: injected from SSM when the container starts.
     secrets = [
       { name = "REDIS_PASSWORD", valueFrom = aws_ssm_parameter.redis_password.arn },
-      { name = "OREGON_API_KEY", valueFrom = aws_ssm_parameter.oregon_api_key.arn },
+      { name = "OREGON_API_KEY", valueFrom = var.oregon_api_key_parameter_arn },
     ]
 
     logConfiguration = {

@@ -1,3 +1,7 @@
+output "oregon_api_key_parameter_arn" {
+  value = aws_ssm_parameter.oregon_api_key.arn
+}
+
 output "vpc_id" {
   description = "The network the environments (and the consumer project) run in"
   value       = aws_vpc.main.id

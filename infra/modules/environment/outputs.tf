@@ -18,8 +18,3 @@ output "redis_password_parameter" {
   description = "SSM parameter holding the Redis password"
   value       = aws_ssm_parameter.redis_password.name
 }
-
-output "oregon_api_key_parameter" {
-  description = "SSM parameter to put the real Oregon API key in"
-  value       = aws_ssm_parameter.oregon_api_key.name
-}

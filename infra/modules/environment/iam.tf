@@ -25,14 +25,14 @@ resource "aws_iam_role_policy_attachment" "execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-# Read access to exactly this environment's two secrets, and nothing else.
+# Read access to exactly two secrets: this environment's Redis password and the shared Oregon key.
 # So a test container can never read production's password.
 data "aws_iam_policy_document" "read_secrets" {
   statement {
     actions = ["ssm:GetParameters"]
     resources = [
       aws_ssm_parameter.redis_password.arn,
-      aws_ssm_parameter.oregon_api_key.arn,
+      var.oregon_api_key_parameter_arn,
     ]
   }
 }

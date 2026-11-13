@@ -1,4 +1,4 @@
-# SD Lottery Scraper: Learning Terraform on AWS
+# KS Lottery Scraper: Learning Terraform on AWS
 
 > **🚧 Work in progress: practice project.**
 > This is the third project in my DevOps portfolio, and the one where I'm **learning Terraform**.

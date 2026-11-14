@@ -1,18 +1,57 @@
-# KS Lottery Scraper: Learning Terraform on AWS
+<div align="center">
 
-> **🚧 Work in progress: practice project.**
-> This is the third project in my DevOps portfolio, and the one where I'm **learning Terraform**.
-> I'm in the practice phase. I'm getting to know Terraform by using it to deploy a real application to AWS,
-> one layer at a time. The code works, but it's a learning exercise, not a production system.
-> I've written down the shortcuts I took and what I'd do differently [further down](#shortcuts-i-took-on-purpose).
+# API Lottery Scraper
+### My personal Terraform lab: building a CI/CD pipeline on AWS
 
-## What this project is for
+<a href="#tech-stack"><img src="https://skillicons.dev/icons?i=terraform,aws,docker,github,nodejs,redis,bash&theme=dark" alt="Terraform, AWS, Docker, GitHub, Node.js, Redis, Bash" /></a>
 
-I wanted to learn Terraform by deploying something real, not by copying a tutorial's "hello world" bucket. So I took an existing Node.js service (a scraper that collects live lottery draw results) and set myself this goal:
+![Status](https://img.shields.io/badge/status-work%20in%20progress-orange)
+![Purpose](https://img.shields.io/badge/purpose-personal%20lab%20%2F%20practice-blueviolet)
+![Focus](https://img.shields.io/badge/focus-CI%2FCD%20on%20AWS-FF9900)
+![Terraform](https://img.shields.io/badge/Terraform-%E2%89%A5%201.10-7B42BC?logo=terraform&logoColor=white)
 
-**Describe all of its AWS infrastructure as code, and deploy it automatically through a CI/CD pipeline with test, staging and production environments.**
+</div>
 
-The application is mostly the vehicle. The learning is in [`infra/`](infra/): how to structure Terraform, where to keep state, how layers share information, how to write a reusable module, and how a pipeline runs Terraform for you.
+> [!IMPORTANT]
+> **This is my personal lab, not a production system.**
+> It's the third project in my DevOps portfolio, and I use it to practise **Terraform**, with the focus on
+> building a **CI/CD pipeline on AWS**. I'm still in the practice phase, getting to know Terraform by
+> building one layer at a time and learning from my mistakes along the way.
+> Everything runs in my own AWS account. I create it for a demo and destroy it afterwards.
+> I've listed the shortcuts I took, and what I'd do differently, [further down](#shortcuts-i-took-on-purpose).
+
+## What this lab is for
+
+I wanted to learn Terraform by building something real, not by copying a tutorial's "hello world" bucket. So I took an existing Node.js service (a scraper that collects live lottery draw results) and set myself this goal:
+
+**Describe all of its AWS infrastructure in Terraform, and deploy every change automatically through an AWS CI/CD pipeline: test → staging → manual approval → production.**
+
+The application is only the thing being deployed. The learning is in [`infra/`](infra/):
+
+- **Terraform:** how to structure it in layers, where to keep state, how layers share information, and how to write one reusable module for several environments.
+- **CI/CD on AWS:** how CodePipeline and CodeBuild run Terraform for you, how one image moves through every environment, and how a test environment can be created and destroyed automatically on every run.
+
+## The pipeline (the focus of this lab)
+
+Every `git push` to `main` runs this pipeline. All of it, including the pipeline itself, is defined in Terraform ([foundation/pipeline.tf](infra/foundation/pipeline.tf)).
+
+```mermaid
+flowchart LR
+    A["📦 Source<br/>GitHub push to main"] --> B["🔨 Build<br/>Docker image, built once,<br/>tagged with commit ID → ECR"]
+    B --> C["🧪 Test<br/>terraform apply<br/>smoke test<br/>terraform destroy"]
+    C --> D["🟡 Staging<br/>terraform apply"]
+    D --> E{"✋ Manual<br/>approval"}
+    E --> F["🟢 Production<br/>terraform apply"]
+```
+
+| Stage | Runs on | What happens |
+|---|---|---|
+| **Source** | CodeConnections | Picks up the commit from GitHub. No access tokens stored in AWS |
+| **Build** | CodeBuild (ARM) | Builds the image once and pushes it to ECR, tagged with the commit ID |
+| **Test** | CodeBuild | Creates a fresh test environment, checks that draws are really being published, then **always** destroys it, pass or fail |
+| **Staging** | CodeBuild | `terraform apply` with the same image tag |
+| **Approval** | Manual | A person checks staging and clicks *Approve* |
+| **Production** | CodeBuild | Same deploy script as staging, now with `ENVIRONMENT=prod` |
 
 ## Progress
 
@@ -149,9 +188,34 @@ redis-cli -p 6390 -a "$REDIS_PASSWORD" subscribe lottery_open_data   # watch dra
 
 ## Tech stack
 
-**Infrastructure:** Terraform (AWS provider 6.x) · AWS ECS Fargate (ARM/Graviton) · ECR · VPC · Cloud Map · SSM Parameter Store · CloudWatch · CodePipeline · CodeBuild · S3
+**Infrastructure as Code**
 
-**Application:** Node.js 22 · Redis 7 · Docker / Docker Compose · cheerio · Day.js
+![Terraform](https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform&logoColor=white)
+![AWS provider 6.x](https://img.shields.io/badge/AWS%20provider-6.x-7B42BC?style=for-the-badge)
+
+**CI/CD**
+
+![AWS CodePipeline](https://img.shields.io/badge/AWS%20CodePipeline-FF9900?style=for-the-badge)
+![AWS CodeBuild](https://img.shields.io/badge/AWS%20CodeBuild-FF9900?style=for-the-badge)
+![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)
+![Bash](https://img.shields.io/badge/Bash-4EAA25?style=for-the-badge&logo=gnubash&logoColor=white)
+
+**AWS runtime**
+
+![Amazon ECS Fargate](https://img.shields.io/badge/ECS%20Fargate%20%28ARM%29-FF9900?style=for-the-badge)
+![Amazon ECR](https://img.shields.io/badge/Amazon%20ECR-FF9900?style=for-the-badge)
+![Amazon VPC](https://img.shields.io/badge/Amazon%20VPC-FF9900?style=for-the-badge)
+![AWS Cloud Map](https://img.shields.io/badge/Cloud%20Map-FF9900?style=for-the-badge)
+![SSM Parameter Store](https://img.shields.io/badge/SSM%20Parameter%20Store-FF9900?style=for-the-badge)
+![CloudWatch](https://img.shields.io/badge/CloudWatch%20Logs-FF9900?style=for-the-badge)
+![Amazon S3](https://img.shields.io/badge/Amazon%20S3-FF9900?style=for-the-badge)
+![AWS IAM](https://img.shields.io/badge/AWS%20IAM-FF9900?style=for-the-badge)
+
+**Application and containers**
+
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js%2022-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis%207-FF4438?style=for-the-badge&logo=redis&logoColor=white)
 
 ## Disclaimer
 
